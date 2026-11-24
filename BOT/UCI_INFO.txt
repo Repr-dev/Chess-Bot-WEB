@@ -1,0 +1,5 @@
+For best performance, use the UCI options:
+Threads = 8 or more 		Try not to fry your computer lol. There are a lot of diminishing returns after 8 threads
+Ponder = true			    Allows the bot to continue calculating while you're playing your move
+OwnBook = true			    Allows the bot to use its opening book (turn off to make it calculate opening moves itself)
+BookFile = book.bin		    Links the opening book to the bot; must be correct if you're using OwnBook = true
