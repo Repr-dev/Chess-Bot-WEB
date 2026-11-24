@@ -1,8 +1,11 @@
+:root {
+    --square-size: 4.5rem;
+}
+
 * {
     margin: 0;
     font-family: "Noto Sans", sans-serif;
 }
-
 body {
     width: 100vw;
     height: 100vh;
@@ -10,8 +13,11 @@ body {
     color: #efe9ee;
     display: grid;
 }
-input {
-    padding: 4px;
+#particles-js {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    z-index: -1;
 }
 #content-wrapper {
     width: 100%;
@@ -23,15 +29,57 @@ input {
     gap: 1rem;
 }
 
-#bot-output {
-    width: 40rem;
-    height: 25rem;
-    overflow: auto;
+#board {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+#board::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("assets/Wood058_1K-JPG_Color.jpg");
+    mix-blend-mode: multiply;
+    opacity: 0.35;
+    z-index: 1;
+    pointer-events: none;
+}
+.rank {
+    display: flex;
+    flex-direction: row;
+}
+.light-square,
+.dark-square {
+    width: var(--square-size);
+    height: var(--square-size);
+}
+.light-square {
+    background: #ffce9e;
+}
+.dark-square {
+    background: #d18b47;
 }
 
-#particles-js {
-    width: 100%;
-    height: 100%;
-    position: fixed;
-    z-index: -1;
+.piece {
+    width: var(--square-size);
+    height: var(--square-size);
+    z-index: 2;
+    position: absolute;
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.15));
+    cursor: grab;
+    user-select: none;
+}
+.piece:active {
+    cursor: grabbing;
+}
+
+input {
+    padding: 4px;
+}
+#bot-output {
+    width: 40rem;
+    height: 10rem;
+    overflow: auto;
 }

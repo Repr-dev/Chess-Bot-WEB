@@ -46,7 +46,7 @@ const wss = new WebSocketServer({ server });
 app.use(express.static(process.cwd()));
 
 wss.on("connection", ws => {
-    console.log("Connected to frontend!");
+    console.log("Connected to client!");
 
     ws.on("message", data => {
         const message = data.toString();
@@ -56,11 +56,7 @@ wss.on("connection", ws => {
     });
 
     ws.on("close", () => {
-        console.log("Client side has disconnected (terminating processes...)");
-
-        // Kill server
-        bot.kill();
-        process.exit(0);
+        console.log("Client side has disconnected");
     });
 
     // Send bot output to frontend
