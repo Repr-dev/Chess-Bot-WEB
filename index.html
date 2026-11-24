@@ -5,9 +5,32 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Chess Bot Demo</title>
 
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"
+            rel="stylesheet"
+        />
+
         <link rel="stylesheet" href="style.css" />
     </head>
     <body>
+        <div id="content-wrapper">
+            <h1>Chess Bot Demo (2500 ELO)</h1>
+            <form id="bot-input-form">
+                <input type="text" id="bot-input" style="width: 36.5rem" placeholder="(Bot stdin)" />
+                <button type="submit">Send</button>
+            </form>
+            <textarea readonly id="bot-output" placeholder="(Bot stdout)"> </textarea>
+        </div>
+
+        <div id="particles-js"></div>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"
+            integrity="sha512-Kef5sc7gfTacR7TZKelcrRs15ipf7+t+n7Zh6mKNJbmW+/RRdCW9nwfLn4YX0s2nO6Kv5Y2ChqgIakaC6PW09A=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        ></script>
         <script src="index.js"></script>
     </body>
 </html>
