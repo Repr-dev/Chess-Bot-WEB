@@ -9,13 +9,12 @@ import path from "node:path";
 // RUNNING THE BOT
 //
 
-const MOVE_TIME = 2000;
 const options = {
     Threads: "2", // threads usable by the bot
     Ponder: "true", // Can the bot think while you play?
     OwnBook: "true", // Can the bot use an opening book?
     BookFile: "book.bin", // book path (relative to chessbot.exe)
-    DefaultMoveTime: "2000" // fallback for time-management issues. Don't use this to edit movetime; instead, use MOVE_TIME
+    DefaultMoveTime: "2000" // fallback for time-management bugs. Editing this does NOT edit movetime
 };
 const bot = spawn("chessbot.exe", { cwd: path.resolve(process.cwd(), "BOT") });
 
