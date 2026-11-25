@@ -25,8 +25,6 @@ for (let [name, value] of Object.entries(options)) {
     bot.stdin.write(`setoption name ${name} value ${value}\n`);
 }
 bot.stdin.write("ucinewgame\n");
-bot.stdin.write("position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 moves e2e4\n");
-bot.stdin.write(`go movetime ${MOVE_TIME}\n`);
 
 // Handle important (error/process stopping) messages from bot
 bot.stderr.on("data", data => {

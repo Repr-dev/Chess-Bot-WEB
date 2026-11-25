@@ -5,6 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Chess Bot Demo</title>
 
+        <link rel="icon" href="assets/pieces/wp.svg" />
+
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
@@ -48,6 +50,14 @@
             crossorigin="anonymous"
             referrerpolicy="no-referrer"
         ></script>
+        <script type="importmap">
+            {
+                "imports": {
+                    "chess.js": "./node_modules/chess.js/dist/esm/chess.js"
+                }
+            }
+        </script>
         <script src="index.js"></script>
+        <script type="module" src="module.js"></script>
     </body>
 </html>
