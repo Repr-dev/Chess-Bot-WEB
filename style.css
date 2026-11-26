@@ -25,8 +25,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-direction: column;
-    gap: 1rem;
+    flex-direction: row;
+    gap: 2rem;
 }
 
 #board {
@@ -54,6 +54,7 @@ body {
 .dark-square {
     width: var(--square-size);
     height: var(--square-size);
+    position: relative;
 }
 .light-square {
     background: #ffce9e;
@@ -61,25 +62,66 @@ body {
 .dark-square {
     background: #d18b47;
 }
-
+.light-square::after,
+.dark-square::after {
+    content: attr(id);
+    font-family: "JetBrains Mono", monospace;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+.light-square::after {
+    color: #d18b4760;
+}
+.dark-square::after {
+    color: #ffce9e60;
+}
 .piece {
     width: var(--square-size);
     height: var(--square-size);
     z-index: 2;
     position: absolute;
     filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.15));
-    cursor: grab;
     user-select: none;
 }
-.piece:active {
+.human-piece {
+    cursor: grab;
+}
+.human-piece:active {
     cursor: grabbing;
 }
 
-input {
-    padding: 4px;
+#position-info, #bot-info {
+    font-size: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    flex: 1;
 }
-#bot-output {
-    width: 40rem;
-    height: 10rem;
-    overflow: auto;
+#position-info {
+    justify-content: flex-end;
+    text-align: right;
+    width: 100%;
+}
+#eval, #depth, #best-move {
+    font-weight: bold;
+}
+#bot-status {
+    font-family: "JetBrains Mono", monospace;
+}
+.waiting-for-player {
+    color: rgb(0, 255, 94);
+    font-weight: bold;
+}
+.calculating {
+    color: rgba(255, 230, 0, 0.8);
+}
+.game-over {
+    color: rgb(255, 0, 43);
+    font-weight: bold;
+    text-decoration: underline;
+    text-decoration-style: wavy;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 2px;
+    margin-bottom: 0;
 }

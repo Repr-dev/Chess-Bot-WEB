@@ -13,22 +13,23 @@
             href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"
             rel="stylesheet"
         />
+        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
 
         <link rel="stylesheet" href="style.css" />
     </head>
     <body>
         <div id="content-wrapper">
-            <h1>Chess Bot Demo (~2500 ELO)</h1>
-
+            <div id="position-info">
+                <span>Evaluation: <br><span id="eval">-</span></span>
+                <span>Depth: <br><span id="depth">-</span></span>
+                <span>Best move: <br><span id="best-move">-</span></span>
+            </div>
             <div id="board">
                 <!-- generated in JS -->
             </div>
-
-            <form id="bot-input-form">
-                <input type="text" id="bot-input" style="width: 36.5rem" placeholder="(Bot stdin)" />
-                <button type="submit">Send</button>
-            </form>
-            <textarea readonly id="bot-output" placeholder="(Bot stdout)"> </textarea>
+            <div id="bot-info">
+                <span id="bot-status" class="waiting-for-player">Waiting for player</span>
+            </div>
         </div>
 
         <div id="particles-js"></div>

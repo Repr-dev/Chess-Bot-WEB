@@ -1,5 +1,7 @@
 "use strict";
 
+const humanColor = "w";
+
 gsap.registerPlugin(Draggable);
 
 // Particles
@@ -54,6 +56,8 @@ for (let i = 0; i < 8; i++) {
         let pieceType = startingPosition[i][j];
         let piece = document.createElement("img");
         piece.classList.add("piece");
+        if (humanColor === "w") piece.classList.add(i < 4 ? "bot-piece" : "human-piece");
+        if (humanColor === "b") piece.classList.add(i < 4 ? "human-piece" : "bot-piece");
         piece.setAttribute("draggable", "false");
         piece.src = `assets/pieces/${pieceType}.svg`;
         squares[i][j].appendChild(piece);

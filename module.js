@@ -3,6 +3,28 @@ import { Chess } from "chess.js";
 
 const chess = new Chess();
 
+let evalEl = document.querySelector("#eval");
+let depthEl = document.querySelector("#depth");
+let bestMoveEl = document.querySelector("#best-move");
+let botStatusEl = document.querySelector("#bot-status");
+function updateBotStatus(waiting) {
+    if (chess.isGameOver()) {
+        botStatusEl.textContent = "GAME OVER";
+        botStatusEl.classList = "game-over";
+        return;
+    }
+
+    if (waiting) {
+        botStatusEl.textContent = "Waiting for player";
+        botStatusEl.classList = "waiting-for-player";
+    }
+    else {
+        botStatusEl.textContent = "Calculating...";
+        botStatusEl.classList = "calculating";
+    }
+}
+updateBotStatus(true);
+
 // Moving pieces (non-socket-dependent)
 let moveList = [];
 function squareIndexToCoords(i, j) {
@@ -94,22 +116,6 @@ function movePiece(piece, toSquare) {
 const socketLocation = `ws://${window.location.host}`;
 const socket = new WebSocket(socketLocation);
 
-let form = document.querySelector("#bot-input-form");
-let inputEl = document.querySelector("#bot-input");
-let outputEl = document.querySelector("#bot-output");
-
-form.addEventListener("submit", e => {
-    e.preventDefault();
-
-    let input = inputEl.value.trim();
-    if (input != "") {
-        // Send input to server
-        socket.send(input);
-    }
-
-    inputEl.value = "";
-});
-
 socket.addEventListener("open", () => {
     console.log("Connected to server at " + socketLocation);
     socket.send("ucinewgame");
@@ -117,40 +123,56 @@ socket.addEventListener("open", () => {
 
 socket.addEventListener("message", e => {
     let data = e.data;
-    if (data.includes("bestmove")) {
-        let spaceSplit = data.split("bestmove ")[1]?.split(" ")[0];
-        let newlineSplit = data.split("bestmove ")[1]?.split("\n")[0];
-        let moveInLan = newlineSplit.length <= spaceSplit.length ? newlineSplit : spaceSplit;
-        moveList.push(moveInLan);
+    if (data.includes("score ")) {
+        let signInteger = chess.turn() === "w" ? 1 : -1;
 
+        if (data.includes("score cp ")) {
+            let scoreSplit = data.split("score cp ")[1]?.split(" ")[0];
+            let score = Number(scoreSplit) * signInteger / 100;
+            evalEl.textContent = score > 0 ? `+${score}` : score;
+        }
+        else if (data.includes("score mate ")) {
+            evalEl.textContent = "mate in " + data.split("score mate ")[1]?.split(" ")[0];
+        }
+    }
+    if (data.includes("depth ")) {
+        depthEl.textContent = data.split("depth ")[1]?.split(" ")[0];
+    }
+    if (data.includes(" pv ")) {
+        let pvMoves = data.split(" pv ")[1]?.split(/\s/gm);
+        bestMoveEl.textContent = pvMoves.length > 1 ? pvMoves[1] : "-";
+    }
+    if (data.includes("bestmove")) {
+        let moveInLan = data.split("bestmove ")[1]?.split(/\s/gm)[0];
         let move = chess.move(moveInLan);
         let fromIndex = squareCoordsToIndex(move.from);
         let toIndex = squareCoordsToIndex(move.to);
+        moveList.push(moveInLan);
         movePiece(squareContents[fromIndex[0]][fromIndex[1]], squares[toIndex[0]][toIndex[1]]);
+        updateBotStatus(true);
 
         if (chess.isGameOver()) {
-            let reasoning = "no reason";
-            if (chess.isCheckmate()) reasoning = "checkmate";
-            else if (chess.isStalemate()) reasoning = "stalemate";
-            else if (chess.isThreefoldRepetition()) reasoning = "draw by threefold repetition";
-            else if (chess.isDrawByFiftyMoves()) reasoning = "draw by 50-move rule";
-            else if (chess.isInsufficientMaterial()) reasoning = "draw by insufficient material";
+            bestMoveEl.textContent = "-";
 
-            alert(`Game over! (${reasoning})\n\nRefresh the page to play a new game.`);
+            if (chess.isCheckmate()) evalEl.textContent = chess.turn() === 'w' ? '0-1' : '1-0';
+            else if (chess.isStalemate()) evalEl.textContent = "½-½ (stalemate)";
+            else if (chess.isThreefoldRepetition()) evalEl.textContent = "½-½ (threefold repetition)";
+            else if (chess.isDrawByFiftyMoves()) evalEl.textContent = "½-½ (50-move rule)";
+            else if (chess.isInsufficientMaterial()) evalEl.textContent = "½-½ (insufficient material)";
+
             document.querySelectorAll(".piece").forEach(el => {
                 el.style.pointerEvents = "none";
             });
         }
     }
 
-    outputEl.textContent += data + "\n";
-    outputEl.scrollTop = outputEl.scrollHeight;
+    console.log(data);
 });
 
 // Moving pieces (socket-dependent)
 function sendMoveToBot(piece, toSquare) {
     let baseMessage = "position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 moves ";
-    const movetime = 2000;
+    const movetime = 1500;
 
     moveList.push(piece.parentElement.id + toSquare.id);
     let writtenMoveList = moveList.join(" ");
@@ -158,8 +180,10 @@ function sendMoveToBot(piece, toSquare) {
 
     socket.send(message);
     socket.send(`go movetime ${movetime}\n`);
+
+    updateBotStatus(false);
 }
-Draggable.create(".piece", {
+Draggable.create(".human-piece", {
     type: "x,y",
     zIndexBoost: true,
     onRelease: function (e) {
