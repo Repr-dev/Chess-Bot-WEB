@@ -88,6 +88,8 @@ body {
     width: var(--square-size);
     height: var(--square-size);
     position: relative;
+    background-position: center;
+    background-repeat: none;
 }
 .light-square {
     background: #ffce9e;
@@ -114,6 +116,20 @@ body {
 }
 .dark-square::after {
     color: #ffce9e60;
+}
+.light-square::before,
+.dark-square::before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+    pointer-events: none;
+    background-image: radial-gradient(rgba(100, 100, 100, 0.5), rgba(100, 100, 100, 0.5) 24.9%, transparent 25%);
+    opacity: 0;
+}
+.opaque-before::before {
+    opacity: 1;
 }
 .piece {
     width: var(--square-size);

@@ -2,12 +2,14 @@
 
 gsap.registerPlugin(Draggable);
 
+new Audio("assets/sounds/game-start.mp3").play();
+
 // Particles
 particlesJS.load("particles-js", "assets/particles.json");
 
 // Chessboard initialization
 
-// transforforms coordinates when the board is flipped
+// transform coordinates when the board is flipped
 const coordTransform = k => humanColor === "w" ? k : 7 - k;
 
 // squares

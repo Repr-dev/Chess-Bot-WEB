@@ -117,6 +117,7 @@ function movePiece(piece, toSquare, enPassantSq = null, highlightToAndFromSquare
         squareContents[newIndex[0]][newIndex[1]].remove();
     if (enPassantSq != null) {
         let enPassantSqIndex = squareCoordsToIndex(enPassantSq);
+        enPassantSqIndex[0] += chess.turn() === "w" ? 1 : -1;
         squareContents[enPassantSqIndex[0]][enPassantSqIndex[1]].remove();
     }
     squareContents[newIndex[0]][newIndex[1]] = piece;
@@ -216,10 +217,20 @@ function sendMoveToBot(piece, toSquare, isFirstMove = false) {
     socket.send(`go movetime ${botMovetime}\n`);
     updateBotStatus(false);
 }
+let currentSquaresMovableTo = [];
 Draggable.create(".human-piece", {
     type: "x,y",
     zIndexBoost: true,
     onPress: function (e) {
+        this.target.parentElement.classList.add("highlighted");
+        currentSquaresMovableTo = chess.moves({ square: this.target.parentElement.id, verbose: true }).map(move => move.to);
+        for (let i = 0; i < currentSquaresMovableTo.length; i++) {
+            let index = squareCoordsToIndex(currentSquaresMovableTo[i]);
+            let square = squares[index[0]][index[1]];
+
+            square.classList.add("opaque-before");
+        }
+
         gsap.to(this.target, {
             scale: 1.1,
             duration: 0.2,
@@ -228,6 +239,16 @@ Draggable.create(".human-piece", {
         });
     },
     onRelease: function (e) {
+        if (this.target.parentElement.classList.contains("highlighted"))
+            this.target.parentElement.classList.remove("highlighted");
+        for (let i = 0; i < currentSquaresMovableTo.length; i++) {
+            let index = squareCoordsToIndex(currentSquaresMovableTo[i]);
+            let square = squares[index[0]][index[1]];
+
+            if (square.classList.contains("opaque-before"))
+                square.classList.remove("opaque-before");
+        }
+
         gsap.to(this.target, {
             scale: 1,
             duration: 0.2,
@@ -256,7 +277,7 @@ Draggable.create(".human-piece", {
             if (touchedSquare) break;
         }
 
-        if (!chess.isGameOver() && isMoveLegal(this.target, touchedSquare.id)) {
+        if (!chess.isGameOver() && touchedSquare != null && isMoveLegal(this.target, touchedSquare.id)) {
             let epSquare = chess.fen().split(' ')[3];
             let move = chess.move({ from: this.target.parentElement.id, to: touchedSquare.id });
             playSoundsForMove(move);
