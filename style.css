@@ -29,6 +29,39 @@ body {
     gap: 2rem;
 }
 
+#game-option-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    height: 100%;
+    width: 100%;
+}
+.game-option-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    height: 100%;
+}
+.game-option-thumbnail {
+    width: min(40vw, 85vh);
+    height: min(40vw, 85vh);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    border: 5px solid black;
+    border-radius: 10px;
+    transition: 0.15s ease-in-out;
+}
+.game-option-thumbnail:hover {
+    transform: scale(1.01);
+}
+.game-option-thumbnail:not(:hover) {
+    filter: blur(2px) grayscale(50%);
+}
+
 #board {
     display: flex;
     flex-direction: column;
@@ -87,7 +120,7 @@ body {
     height: var(--square-size);
     z-index: 2;
     position: absolute;
-    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.15));
+    filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.15));
     user-select: none;
 }
 .human-piece {
@@ -101,23 +134,26 @@ body {
     font-size: 2rem;
     display: flex;
     flex-direction: column;
-    gap: 3rem;
     flex: 1;
 }
 #position-info {
     justify-content: flex-end;
     text-align: right;
+    gap: 3rem;
     width: 100%;
+}
+#bot-info {
+    gap: 0.5rem;
 }
 #eval, #depth, #best-move {
     font-weight: bold;
 }
-#show-best-move {
+button {
     font-size: 1.3rem;
     cursor: pointer;
     transition: 0.1s ease-in-out;
 }
-#show-best-move:hover {
+button:hover {
     transform: scale(1.1);
 }
 #bot-status {

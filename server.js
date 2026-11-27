@@ -40,7 +40,7 @@ bot.on("close", code => {
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
-app.use(express.static(process.cwd()));
+app.use(express.static(process.cwd(), { extensions: ['html'] }));
 
 wss.on("connection", ws => {
     console.log("Connected to client!");

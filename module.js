@@ -2,12 +2,14 @@
 import { Chess } from "chess.js";
 
 const chess = new Chess();
+const botMovetime = 1500; // milliseconds
 
 let evalEl = document.querySelector("#eval");
 let depthEl = document.querySelector("#depth");
 let bestMoveEl = document.querySelector("#best-move");
 let showBestMoveBtn = document.querySelector("#show-best-move");
 let botStatusEl = document.querySelector("#bot-status");
+let postGameDiv = document.querySelector("#post-game-div");
 function updateBotStatus(waiting) {
     if (chess.isGameOver()) {
         botStatusEl.textContent = "GAME OVER";
@@ -16,6 +18,8 @@ function updateBotStatus(waiting) {
         showBestMoveBtn.style.display = "none";
         bestMoveEl.style.display = "inline";
         bestMoveEl.textContent = "-";
+
+        postGameDiv.style.display = "block";
         return;
     }
 
@@ -31,7 +35,7 @@ function updateBotStatus(waiting) {
         bestMoveEl.style.display = "none";
     }
 }
-updateBotStatus(true);
+updateBotStatus(humanColor === "w" ? true : false);
 
 // Moving pieces (non-socket-dependent)
 let moveList = [];
@@ -132,6 +136,7 @@ const socket = new WebSocket(socketLocation);
 
 socket.addEventListener("open", () => {
     console.log("Connected to server at " + socketLocation);
+    if (humanColor !== "w") sendMoveToBot(null, null, true);
     socket.send("ucinewgame");
 });
 
@@ -194,17 +199,21 @@ function clearHighlightedSquares() {
         }
     }
 }
-function sendMoveToBot(piece, toSquare) {
+function sendMoveToBot(piece, toSquare, isFirstMove = false) {
     let baseMessage = "position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 moves ";
-    const movetime = 1500;
 
-    moveList.push(piece.parentElement.id + toSquare.id);
-    let writtenMoveList = moveList.join(" ");
-    let message = baseMessage + writtenMoveList + "\n";
+    if (isFirstMove) {
+        baseMessage = "position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1\n";
+        socket.send(baseMessage);
+    }
+    else {
+        moveList.push(piece.parentElement.id + toSquare.id);
+        let writtenMoveList = moveList.join(" ");
+        let message = baseMessage + writtenMoveList + "\n";
+        socket.send(message);
+    }
 
-    socket.send(message);
-    socket.send(`go movetime ${movetime}\n`);
-
+    socket.send(`go movetime ${botMovetime}\n`);
     updateBotStatus(false);
 }
 Draggable.create(".human-piece", {
