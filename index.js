@@ -64,3 +64,11 @@ for (let i = 0; i < 8; i++) {
         squareContents[i].push(piece);
     }
 }
+
+// Other
+let bestMoveEl = document.querySelector("#best-move");
+let showBestMoveBtn = document.querySelector("#show-best-move");
+function showBestMove() {
+    showBestMoveBtn.style.display = "none";
+    bestMoveEl.style.display = "inline";
+}

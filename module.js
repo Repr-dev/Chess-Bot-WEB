@@ -6,11 +6,16 @@ const chess = new Chess();
 let evalEl = document.querySelector("#eval");
 let depthEl = document.querySelector("#depth");
 let bestMoveEl = document.querySelector("#best-move");
+let showBestMoveBtn = document.querySelector("#show-best-move");
 let botStatusEl = document.querySelector("#bot-status");
 function updateBotStatus(waiting) {
     if (chess.isGameOver()) {
         botStatusEl.textContent = "GAME OVER";
         botStatusEl.classList = "game-over";
+
+        showBestMoveBtn.style.display = "none";
+        bestMoveEl.style.display = "inline";
+        bestMoveEl.textContent = "-";
         return;
     }
 
@@ -21,6 +26,9 @@ function updateBotStatus(waiting) {
     else {
         botStatusEl.textContent = "Calculating...";
         botStatusEl.classList = "calculating";
+
+        showBestMoveBtn.style.display = "inline";
+        bestMoveEl.style.display = "none";
     }
 }
 updateBotStatus(true);
@@ -43,9 +51,16 @@ function isMoveLegal(piece, toSquare) {
 
     return false;
 }
-function movePiece(piece, toSquare, enPassantSq = null) {
+function movePiece(piece, toSquare, enPassantSq = null, highlightToAndFromSquares = false) {
     let oldSquareCoords = piece.parentElement.id;
     let oldIndex = squareCoordsToIndex(oldSquareCoords);
+
+    // Highlighting squares
+    if (highlightToAndFromSquares) {
+        let fromSquare = squares[oldIndex[0]][oldIndex[1]];
+        fromSquare.classList.add("highlighted");
+        toSquare.classList.add("highlighted");
+    }
 
     // Using FLIP to correctly offset the piece
     let oldRect = piece.getBoundingClientRect();
@@ -65,43 +80,33 @@ function movePiece(piece, toSquare, enPassantSq = null) {
     });
 
     // Castling
-    const isThereAFriendlyRookAt = (i, j) => {
-        let color = i === 7 ? "w" : "b";
-        if (squareContents[i][j] != null) {
-            let pieceType = squareContents[i][j].src;
-            if (pieceType.includes(color + "r")) return true;
-        } else return false;
-    };
     if (
         piece.src.includes("wk") &&
         oldSquareCoords === "e1" &&
-        toSquare.id === "g1" &&
-        isThereAFriendlyRookAt(7, 7)
+        toSquare.id === "g1"
     ) {
         movePiece(squareContents[7][7], squares[7][5]);
     } else if (
         piece.src.includes("bk") &&
         oldSquareCoords === "e8" &&
-        toSquare.id === "g8" &&
-        isThereAFriendlyRookAt(0, 7)
+        toSquare.id === "g8"
     ) {
         movePiece(squareContents[0][7], squares[0][5]);
     } else if (
         piece.src.includes("wk") &&
         oldSquareCoords === "e1" &&
-        toSquare.id === "c1" &&
-        isThereAFriendlyRookAt(7, 0)
+        toSquare.id === "c1"
     ) {
         movePiece(squareContents[7][0], squares[7][3]);
     } else if (
         piece.src.includes("bk") &&
         oldSquareCoords === "e8" &&
-        toSquare.id === "c8" &&
-        isThereAFriendlyRookAt(0, 0)
+        toSquare.id === "c8"
     ) {
         movePiece(squareContents[0][0], squares[0][3]);
     }
 
+    // Moving/deleting pieces
     let newIndex = squareCoordsToIndex(toSquare.id);
     squareContents[oldIndex[0]][oldIndex[1]] = null;
     if (squareContents[newIndex[0]][newIndex[1]] != null)
@@ -158,7 +163,7 @@ socket.addEventListener("message", e => {
         let fromIndex = squareCoordsToIndex(move.from);
         let toIndex = squareCoordsToIndex(move.to);
         moveList.push(moveInLan);
-        movePiece(squareContents[fromIndex[0]][fromIndex[1]], squares[toIndex[0]][toIndex[1]], move.isEnPassant() ? epSquare : null);
+        movePiece(squareContents[fromIndex[0]][fromIndex[1]], squares[toIndex[0]][toIndex[1]], move.isEnPassant() ? epSquare : null, true);
         playSoundsForMove(move);
         updateBotStatus(true);
 
@@ -182,6 +187,13 @@ socket.addEventListener("message", e => {
 });
 
 // Moving pieces (socket-dependent)
+function clearHighlightedSquares() {
+    for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+            if (squares[i][j].classList.contains("highlighted")) squares[i][j].classList.remove("highlighted");
+        }
+    }
+}
 function sendMoveToBot(piece, toSquare) {
     let baseMessage = "position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 moves ";
     const movetime = 1500;
@@ -226,6 +238,7 @@ Draggable.create(".human-piece", {
             playSoundsForMove(move);
             sendMoveToBot(this.target, touchedSquare);
             movePiece(this.target, touchedSquare, move.isEnPassant() ? epSquare : null);
+            clearHighlightedSquares();
         } else
             gsap.to(this.target, {
                 x: 0,
