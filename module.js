@@ -210,7 +210,22 @@ function sendMoveToBot(piece, toSquare) {
 Draggable.create(".human-piece", {
     type: "x,y",
     zIndexBoost: true,
+    onPress: function (e) {
+        gsap.to(this.target, {
+            scale: 1.1,
+            duration: 0.2,
+            ease: "back.out",
+            overwrite: "auto"
+        });
+    },
     onRelease: function (e) {
+        gsap.to(this.target, {
+            scale: 1,
+            duration: 0.2,
+            ease: "back.out",
+            overwrite: "auto"
+        });
+
         // Find square being overlapped
         let touchedSquare = null;
         for (let i = 0; i < 8; i++) {

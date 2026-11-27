@@ -30,6 +30,7 @@ for (let i = 0; i < 8; i++) {
         let square = document.createElement("div");
         square.classList.add((i + j) % 2 === 0 ? "light-square" : "dark-square");
         square.id = squareIndexToCoords(i, j);
+
         rank.appendChild(square);
         squares[i].push(square);
     }
