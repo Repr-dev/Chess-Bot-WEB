@@ -27,9 +27,6 @@ updateBotStatus(true);
 
 // Moving pieces (non-socket-dependent)
 let moveList = [];
-function squareIndexToCoords(i, j) {
-    return String.fromCharCode(97 + j) + (8 - i).toString();
-}
 function squareCoordsToIndex(coords) {
     let j = coords.charCodeAt(0) - 97;
     let i = 8 - coords[1];
@@ -46,7 +43,7 @@ function isMoveLegal(piece, toSquare) {
 
     return false;
 }
-function movePiece(piece, toSquare) {
+function movePiece(piece, toSquare, enPassantSq = null) {
     let oldSquareCoords = piece.parentElement.id;
     let oldIndex = squareCoordsToIndex(oldSquareCoords);
 
@@ -109,7 +106,19 @@ function movePiece(piece, toSquare) {
     squareContents[oldIndex[0]][oldIndex[1]] = null;
     if (squareContents[newIndex[0]][newIndex[1]] != null)
         squareContents[newIndex[0]][newIndex[1]].remove();
+    if (enPassantSq != null) {
+        let enPassantSqIndex = squareCoordsToIndex(enPassantSq);
+        squareContents[enPassantSqIndex[0]][enPassantSqIndex[1]].remove();
+    }
     squareContents[newIndex[0]][newIndex[1]] = piece;
+}
+function playSoundsForMove(move) {
+    if (chess.inCheck()) new Audio("./assets/sounds/move-check.mp3").play();
+    else if (move.isKingsideCastle() || move.isQueensideCastle()) new Audio("./assets/sounds/castle.mp3").play();
+    else if (move.isPromotion()) new Audio("./assets/sounds/promote.mp3").play();
+    else if (move.isCapture()) new Audio("./assets/sounds/capture.mp3").play();
+    else new Audio("./assets/sounds/move-opponent.mp3").play();
+    if (chess.isGameOver()) new Audio("./assets/sounds/game-end.mp3").play();
 }
 
 // Networking stuff
@@ -143,22 +152,25 @@ socket.addEventListener("message", e => {
         bestMoveEl.textContent = pvMoves.length > 1 ? pvMoves[1] : "-";
     }
     if (data.includes("bestmove")) {
+        let epSquare = chess.fen().split(' ')[3];
         let moveInLan = data.split("bestmove ")[1]?.split(/\s/gm)[0];
         let move = chess.move(moveInLan);
         let fromIndex = squareCoordsToIndex(move.from);
         let toIndex = squareCoordsToIndex(move.to);
         moveList.push(moveInLan);
-        movePiece(squareContents[fromIndex[0]][fromIndex[1]], squares[toIndex[0]][toIndex[1]]);
+        movePiece(squareContents[fromIndex[0]][fromIndex[1]], squares[toIndex[0]][toIndex[1]], move.isEnPassant() ? epSquare : null);
+        playSoundsForMove(move);
         updateBotStatus(true);
 
         if (chess.isGameOver()) {
             bestMoveEl.textContent = "-";
+            depthEl.textContent = "-";
 
-            if (chess.isCheckmate()) evalEl.textContent = chess.turn() === 'w' ? '0-1' : '1-0';
+            if (chess.isCheckmate()) evalEl.textContent = chess.turn() === 'w' ? '0-1 (Black wins)' : '1-0 (White wins)';
             else if (chess.isStalemate()) evalEl.textContent = "½-½ (stalemate)";
-            else if (chess.isThreefoldRepetition()) evalEl.textContent = "½-½ (threefold repetition)";
-            else if (chess.isDrawByFiftyMoves()) evalEl.textContent = "½-½ (50-move rule)";
-            else if (chess.isInsufficientMaterial()) evalEl.textContent = "½-½ (insufficient material)";
+            else if (chess.isThreefoldRepetition()) evalEl.textContent = "½-½ (draw; threefold repetition)";
+            else if (chess.isDrawByFiftyMoves()) evalEl.textContent = "½-½ (draw; 50-move rule)";
+            else if (chess.isInsufficientMaterial()) evalEl.textContent = "½-½ (draw; insufficient material)";
 
             document.querySelectorAll(".piece").forEach(el => {
                 el.style.pointerEvents = "none";
@@ -209,9 +221,11 @@ Draggable.create(".human-piece", {
         }
 
         if (!chess.isGameOver() && isMoveLegal(this.target, touchedSquare.id)) {
-            chess.move({ from: this.target.parentElement.id, to: touchedSquare.id });
+            let epSquare = chess.fen().split(' ')[3];
+            let move = chess.move({ from: this.target.parentElement.id, to: touchedSquare.id });
+            playSoundsForMove(move);
             sendMoveToBot(this.target, touchedSquare);
-            movePiece(this.target, touchedSquare);
+            movePiece(this.target, touchedSquare, move.isEnPassant() ? epSquare : null);
         } else
             gsap.to(this.target, {
                 x: 0,
