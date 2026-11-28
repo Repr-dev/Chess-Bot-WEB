@@ -127,6 +127,7 @@ body {
     pointer-events: none;
     background-image: radial-gradient(rgba(100, 100, 100, 0.5), rgba(100, 100, 100, 0.5) 24.9%, transparent 25%);
     opacity: 0;
+    transition: opacity 0.1s ease-out;
 }
 .opaque-before-pseudoel::before {
     opacity: 1;
