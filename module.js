@@ -55,7 +55,7 @@ function isMoveLegal(piece, toSquare) {
 
     return false;
 }
-function movePiece(piece, toSquare, enPassantSq = null, highlightToAndFromSquares = false) {
+function movePiece(piece, toSquare, enPassantSq = null, highlightToAndFromSquares = false, promoPiece = null) {
     let oldSquareCoords = piece.parentElement.id;
     let oldIndex = squareCoordsToIndex(oldSquareCoords);
 
@@ -120,6 +120,7 @@ function movePiece(piece, toSquare, enPassantSq = null, highlightToAndFromSquare
         enPassantSqIndex[0] += chess.turn() === "w" ? 1 : -1;
         squareContents[enPassantSqIndex[0]][enPassantSqIndex[1]].remove();
     }
+    if (promoPiece != null) piece.src = piece.src.replace("p.svg", `${promoPiece}.svg`);
     squareContents[newIndex[0]][newIndex[1]] = piece;
 }
 function playSoundsForMove(move) {
@@ -168,8 +169,9 @@ socket.addEventListener("message", e => {
         let move = chess.move(moveInLan);
         let fromIndex = squareCoordsToIndex(move.from);
         let toIndex = squareCoordsToIndex(move.to);
+        let promoPiece = move.promotion ?? null;
         moveList.push(moveInLan);
-        movePiece(squareContents[fromIndex[0]][fromIndex[1]], squares[toIndex[0]][toIndex[1]], move.isEnPassant() ? epSquare : null, true);
+        movePiece(squareContents[fromIndex[0]][fromIndex[1]], squares[toIndex[0]][toIndex[1]], move.isEnPassant() ? epSquare : null, true, promoPiece);
         playSoundsForMove(move);
         updateBotStatus(true);
 
@@ -200,15 +202,15 @@ function clearHighlightedSquares() {
         }
     }
 }
-function sendMoveToBot(piece, toSquare, isFirstMove = false) {
+function sendMoveToBot(piece, toSquare, isBotsOpeningMoveToBeginGame = false, promoPiece = null) {
     let baseMessage = "position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 moves ";
 
-    if (isFirstMove) {
+    if (isBotsOpeningMoveToBeginGame) {
         baseMessage = "position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1\n";
         socket.send(baseMessage);
     }
     else {
-        moveList.push(piece.parentElement.id + toSquare.id);
+        moveList.push(piece.parentElement.id + toSquare.id + (promoPiece ?? ""));
         let writtenMoveList = moveList.join(" ");
         let message = baseMessage + writtenMoveList + "\n";
         socket.send(message);
@@ -228,7 +230,7 @@ Draggable.create(".human-piece", {
             let index = squareCoordsToIndex(currentSquaresMovableTo[i]);
             let square = squares[index[0]][index[1]];
 
-            square.classList.add("opaque-before");
+            square.classList.add("opaque-before-pseudoel");
         }
 
         gsap.to(this.target, {
@@ -245,8 +247,8 @@ Draggable.create(".human-piece", {
             let index = squareCoordsToIndex(currentSquaresMovableTo[i]);
             let square = squares[index[0]][index[1]];
 
-            if (square.classList.contains("opaque-before"))
-                square.classList.remove("opaque-before");
+            if (square.classList.contains("opaque-before-pseudoel"))
+                square.classList.remove("opaque-before-pseudoel");
         }
 
         gsap.to(this.target, {
@@ -279,10 +281,32 @@ Draggable.create(".human-piece", {
 
         if (!chess.isGameOver() && touchedSquare != null && isMoveLegal(this.target, touchedSquare.id)) {
             let epSquare = chess.fen().split(' ')[3];
-            let move = chess.move({ from: this.target.parentElement.id, to: touchedSquare.id });
+
+            let rank = Number(touchedSquare.id[1]);
+            let promoPiece = null;
+            if (/p\.svg/.test(this.target.src) && (rank === 1 || rank === 8)) {
+                switch (prompt("Promote to a...\n(a) queen\n(b) knight\n(c) bishop\n(d) rook")) {
+                    case "a":
+                        promoPiece = "q";
+                        break;
+                    case "b":
+                        promoPiece = "n";
+                        break;
+                    case "c":
+                        promoPiece = "b";
+                        break;
+                    case "d":
+                        promoPiece = "r";
+                        break;
+                    default:
+                        promoPiece = "q";
+                }
+            }
+
+            let move = chess.move({ from: this.target.parentElement.id, to: touchedSquare.id, promotion: promoPiece ?? undefined });
             playSoundsForMove(move);
-            sendMoveToBot(this.target, touchedSquare);
-            movePiece(this.target, touchedSquare, move.isEnPassant() ? epSquare : null);
+            sendMoveToBot(this.target, touchedSquare, false, promoPiece);
+            movePiece(this.target, touchedSquare, move.isEnPassant() ? epSquare : null, false, promoPiece);
             clearHighlightedSquares();
         } else
             gsap.to(this.target, {
